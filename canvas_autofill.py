@@ -1,9 +1,9 @@
 from pyautogui import press, typewrite, hotkey
 from pynput import keyboard
 import time
-
+ans=[]
 def take_new_input():
-    ans=[]
+    
     file_path= get_ans_file_path()
 
     inp = ""
@@ -17,7 +17,7 @@ def take_new_input():
     
     with open(file_path, "w") as new_file:
         for x in ans:
-            new_file.write(x+",")
+            new_file.write(x+"\n")
 
 def get_ans_file_path():
     answer_folder="/home/antimony/school/"
@@ -33,7 +33,8 @@ def get_ans_file_path():
     
     return file_path
 
-def type_answers(ans):
+def type_answers():
+    global ans
     press('backspace')      # remove the '+' that was just typed
     for x in ans[:-1]:      # loop until the second last element
         typewrite(x)
@@ -44,15 +45,26 @@ def type_answers(ans):
 
     typewrite(ans[-1])      # type the last element
 
-def load_ans(file_path):
+def load_ans():
+    load_from_file = input("load answers from file? 1 for yes 0 for no: ")
+
+    if load_from_file == "1":
+        file_path=get_ans_file_path()
+        answers=load_a_from_file(file_path)
+    else:
+        answers=take_new_input()
+
+    print("Done loading answers!")
+    return answers
+
+def load_a_from_file(file_path):
 
     with open(file_path, "r") as old_file:
-        dirty_ans = old_file.readlines()
-        ans = [x[:-1] for x in dirty_ans]    # remove the newline character
-
+        file_lines = old_file.readlines()
+        answers = [x[:-1] for x in file_lines]    # remove the newline character
+    return answers
 
 def on_press(key):
-
     if key == keyboard.Key.esc:
         return False        # stop listener
     try:
@@ -60,7 +72,7 @@ def on_press(key):
     except:
         k = key.name 
     if k == "+":
-        type_answers(ans)
+        type_answers()
 
 def main():
     print("""
@@ -73,18 +85,8 @@ answer field for the first question and hit the '+' key
 the script will now automatically type the answers in
 ---press the esc key to kill the script---
     """)
-
-    load_from_file = input("load answers from file? 1 for yes 0 for no: ")
-
-    if load_from_file == "1":
-
-        file_path=get_ans_file_path()
-        load_ans(file_path)
-
-    else:
-        take_new_input()
-
-    print("Done loading answers!")
+    global ans
+    ans=load_ans()
 
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
