@@ -2,45 +2,59 @@ from pyautogui import press, typewrite, hotkey
 from pynput import keyboard
 import time
 
-print("""
-Hello please enter all the answers, in sequntial order
-if you don't know answer just hit enter
-once you are done type # and hit enter
-when you are ready to input your answers into canvas
-click on the answer section of the first quesiton 
-and hit the '+' key""")
-
-ans = []
-
-answer_file_path="/path/to/your/answers/file"
-
-'''
-answer file saves answers as one line entry for each question
-'''
-
 def take_new_input():
+    ans=[]
+    file_path= get_ans_file_path()
+
     inp = ""
-    c = 1
-    inp = input("enter ans for qn 1: ")
+    c = 0
     while inp != "#":
-        ans.append(inp)
         c += 1
         inp = input(f"enter ans for qn {c}: ")
+        ans.append(inp)
+    
+    ans.pop()   # remove the # from the list of answers
+    
+    with open(file_path, "w") as new_file:
+        for x in ans:
+            new_file.write(x+",")
 
+def get_ans_file_path():
+    answer_folder="/home/antimony/school/"
+    default_file_name="canvas_answers"
+
+    file_name=input("enter the name of the file where you want to save\nthese answers hit enter to use the default file: ")
+    
+    if file_name:
+        file_path=answer_folder+file_name
+    
+    else:
+        file_path=answer_folder+default_file_name
+    
+    return file_path
 
 def type_answers(ans):
     press('backspace')      # remove the '+' that was just typed
-    for x in ans:
+    for x in ans[:-1]:      # loop until the second last element
         typewrite(x)
         press('tab')
         time.sleep(0.1)
         press('tab')
         time.sleep(0.1)
 
+    typewrite(ans[-1])      # type the last element
+
+def load_ans(file_path):
+
+    with open(file_path, "r") as old_file:
+        dirty_ans = old_file.readlines()
+        ans = [x[:-1] for x in dirty_ans]    # remove the newline character
+
 
 def on_press(key):
+
     if key == keyboard.Key.esc:
-        return False  # stop listener
+        return False        # stop listener
     try:
         k = key.char
     except:
@@ -48,23 +62,33 @@ def on_press(key):
     if k == "+":
         type_answers(ans)
 
+def main():
+    print("""
+Hello, please enter all the answers in sequntial order
+if you don't know answer for a question just hit enter and
+continue to the next question once you are done type # 
+and hit enter. When you are ready to input your answers
+into canvas got the canvas quiz page, and click on the 
+answer field for the first question and hit the '+' key
+the script will now automatically type the answers in
+---press the esc key to kill the script---
+    """)
 
-load_from_file = input("load answers from file? 1 for yes 0 for no: ")
+    load_from_file = input("load answers from file? 1 for yes 0 for no: ")
 
-if load_from_file == "1":
+    if load_from_file == "1":
 
-    with open(answer_file_path, "r") as old_file:
-        dirty_ans = old_file.readlines()
-        ans = [x[:-1] for x in dirty_ans]    # remove the newline character
+        file_path=get_ans_file_path()
+        load_ans(file_path)
 
-else:
-    take_new_input()
-    with open(answer_file_path, "w") as new_file:
-        for x in ans:
-            new_file.write(x+"\n")
+    else:
+        take_new_input()
 
-print("Done loading answers!")
+    print("Done loading answers!")
 
-listener = keyboard.Listener(on_press=on_press)
-listener.start()
-listener.join()
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+    listener.join()
+
+if __name__== "__main__":
+    main()
