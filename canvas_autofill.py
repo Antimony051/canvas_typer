@@ -1,10 +1,12 @@
 from pyautogui import press, typewrite, hotkey
 from pynput import keyboard
 import time
-ans=[]
+ans = []
+
+
 def take_new_input():
-    
-    file_path= get_ans_file_path()
+    global ans
+    file_path = get_ans_file_path()
 
     inp = ""
     c = 0
@@ -12,26 +14,30 @@ def take_new_input():
         c += 1
         inp = input(f"enter ans for qn {c}: ")
         ans.append(inp)
-    
+
     ans.pop()   # remove the # from the list of answers
-    
+
     with open(file_path, "w") as new_file:
         for x in ans:
             new_file.write(x+"\n")
+    return ans
+
 
 def get_ans_file_path():
-    answer_folder="/home/antimony/school/"
-    default_file_name="canvas_answers"
+    answer_folder = "/home/antimony/school/"
+    default_file_name = "canvas_answers"
 
-    file_name=input("enter the name of the file where you want to save\nthese answers hit enter to use the default file: ")
-    
+    file_name = input(
+        "enter the name of the file where you want to save\nthese answers hit enter to use the default file: ")
+
     if file_name:
-        file_path=answer_folder+file_name
-    
+        file_path = answer_folder+file_name
+
     else:
-        file_path=answer_folder+default_file_name
-    
+        file_path = answer_folder+default_file_name
+
     return file_path
+
 
 def type_answers():
     global ans
@@ -39,30 +45,34 @@ def type_answers():
     for x in ans[:-1]:      # loop until the second last element
         typewrite(x)
         press('tab')
-        time.sleep(0.1)
+        time.sleep(0.01)
         press('tab')
         time.sleep(0.1)
 
     typewrite(ans[-1])      # type the last element
 
-def load_ans():
-    load_from_file = input("load answers from file? 1 for yes 0 for no: ")
 
+def load_ans():
+
+    load_from_file = input("load answers from file? 1 for yes 0 for no: ")
     if load_from_file == "1":
-        file_path=get_ans_file_path()
-        answers=load_a_from_file(file_path)
+        file_path = get_ans_file_path()
+        answers = load_a_from_file(file_path)
     else:
-        answers=take_new_input()
+        answers = take_new_input()
 
     print("Done loading answers!")
     return answers
+
 
 def load_a_from_file(file_path):
 
     with open(file_path, "r") as old_file:
         file_lines = old_file.readlines()
-        answers = [x[:-1] for x in file_lines]    # remove the newline character
+        # remove the newline character
+        answers = [x[:-1] for x in file_lines]
     return answers
+
 
 def on_press(key):
     if key == keyboard.Key.esc:
@@ -70,9 +80,10 @@ def on_press(key):
     try:
         k = key.char
     except:
-        k = key.name 
+        k = key.name
     if k == "+":
         type_answers()
+
 
 def main():
     print("""
@@ -86,11 +97,12 @@ the script will now automatically type the answers in
 ---press the esc key to kill the script---
     """)
     global ans
-    ans=load_ans()
+    ans = load_ans()
 
     listener = keyboard.Listener(on_press=on_press)
     listener.start()
     listener.join()
 
-if __name__== "__main__":
+
+if __name__ == "__main__":
     main()
